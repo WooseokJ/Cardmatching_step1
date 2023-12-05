@@ -7,7 +7,7 @@ public class Coordinates {
         this.col = col;
     }
 
-    // 기본생성자로 row, col 0으로 초기화.
+    // 기본생성자로 row, col -1으로 초기화.
     public Coordinates() {
         this.row = -1;
         this.col = -1;
