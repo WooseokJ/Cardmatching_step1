@@ -2,13 +2,13 @@
 import java.util.*;
 
 public class CardMatchingGame_step1 {
-    private static final int row = 3;
-    private static final int col = 6;
+    private static final int ROW = 3;
+    private static final int COL = 6;
     private List<Integer> cardList;
-    private String[][] xmarkList = new String[row][col];
+    private String[][] xmarkList = new String[ROW][COL];
     private int[][] board;
     private boolean[][] isShow;
-    private boolean tmpShow[][]; // 잠시 보여주는 용도.
+    private boolean[][] tmpShow; // 잠시 보여주는 용도.
     private static CardMatchingGame_step1 T ;
 
     // 객체 선언시 초기화 과정.
@@ -30,13 +30,13 @@ public class CardMatchingGame_step1 {
 
     // 24개중 18개 카드 넣기
     private void setupBoard() {
-        board = new int[row][col];
-        isShow = new boolean[row][col];
-        tmpShow = new boolean[row][col];
+        board = new int[ROW][COL];
+        isShow = new boolean[ROW][COL];
+        tmpShow = new boolean[ROW][COL];
 
         int count = 0;
-        for (int i = 0; i < row; i++) {
-            for (int j = 0; j < col ; j++) {
+        for (int i = 0; i < ROW; i++) {
+            for (int j = 0; j < COL; j++) {
                 if(count < 18 ) {
                     board[i][j] = cardList.get(count++);
                     xmarkList[i][j] = "X";
@@ -49,8 +49,8 @@ public class CardMatchingGame_step1 {
 
     // 콘솔에 출력.
     private void showBoard() {
-        for (int i = 0; i < row; i++) {
-            for (int j = 0; j < col; j++) {
+        for (int i = 0; i < ROW; i++) {
+            for (int j = 0; j < COL; j++) {
                 if (tmpShow[i][j]) {
                     System.out.printf(board[i][j] + " ");
                     tmpShow[i][j] = false;
@@ -70,7 +70,6 @@ public class CardMatchingGame_step1 {
     }
 
     // 입력받는 좌표 반환.(참고: 입력이 이상한경우에대한 예외처리)
-
     private Coordinates inputCoordinator(Scanner scanner, String text, int rowInput, int colInput) throws Exception {
         while(true) {
             try {
@@ -78,40 +77,47 @@ public class CardMatchingGame_step1 {
                 String input1 = scanner.nextLine();
                 input1 = input1.replaceAll("[()]", "");
                 String[] parts = input1.split(",");
-
-                if (parts.length != 2) { // 행과 열의 입력값 구조가 아닐떄
-                    throw new CustomException(CustomException.ErrorType.inputMatrixMessage);
-                } else if (isInteger(parts[0]) || isInteger(parts[1]) ) { // 행 과 열이 정수가 아닐떄
-                    throw new CustomException(CustomException.ErrorType.inputMatrixMessage);
-                }
-                int row = Integer.parseInt(parts[0].trim()) - 1;
-                int col = Integer.parseInt(parts[1].trim()) - 1;
-
-                if(row == rowInput && col == colInput) { // 이전좌표와 입력한 좌표가 같을떄
-                    throw new CustomException(CustomException.ErrorType.differentCoordinateMessage);
-                }
-                if(row < 0 || col < 0 || row > 3 || col > 6) { // 범위를 벗어날떄
-                    throw new CustomException(CustomException.ErrorType.outOfRangeMessage);
-                }
-                if (xmarkList[row][col] == " ") { // // 이미 찾은 카드일떄
-                    throw new CustomException(CustomException.ErrorType.alreadyFoundMessage);
-                }
-                return new Coordinates(row, col);
+                return validateInput(parts, rowInput, colInput);
             } catch (CustomException e) {
-                if(e.getErrorType() == CustomException.ErrorType.inputMatrixMessage) {
-                    System.out.println("행과 열을 입력해주세요. ex) (1,1) 혹은 1,1");
-                } else if (e.getErrorType() == CustomException.ErrorType.outOfRangeMessage){
-                    System.out.println("범위가 벗어났습니다.");
-                } else if (e.getErrorType() == CustomException.ErrorType.alreadyFoundMessage) {
-                    System.out.println("해당 자리는 이미 찾았습니다. ");
-                } else if (e.getErrorType() == CustomException.ErrorType.differentCoordinateMessage){
-                    System.out.println("이전좌표랑 다른좌표를 입력해주세요.");
-                } else {
-                    System.out.println("알수없는 오류");
-                }
+                handleCustomException(e);
                 continue;
             }
 
+        }
+    }
+    // 좌표 입력
+    private Coordinates inputCoordinates(Scanner scanner, String text) throws Exception {
+        Coordinates matrix = new Coordinates();
+        return inputCoordinator(scanner, text, matrix.getRow(), matrix.getCol());
+    }
+    // 입력값에대한 유효성검사.
+    private Coordinates validateInput(String[] parts, int rowInput, int colInput) throws CustomException {
+        if (parts.length != 2) { // 행과 열의 입력값 구조가 아닐떄
+            throw new CustomException(CustomException.ErrorType.inputMatrixMessage);
+        } else if (isInteger(parts[0]) || isInteger(parts[1]) ) { // 행 과 열이 정수가 아닐떄
+            throw new CustomException(CustomException.ErrorType.inputMatrixMessage);
+        }
+        int row = Integer.parseInt(parts[0].trim()) - 1;
+        int col = Integer.parseInt(parts[1].trim()) - 1;
+
+        if(row == rowInput && col == colInput) { // 이전좌표와 입력한 좌표가 같을떄
+            throw new CustomException(CustomException.ErrorType.differentCoordinateMessage);
+        } else if(row < 0 || col < 0 || row > 2 || col > 5) { // 범위를 벗어날떄
+            throw new CustomException(CustomException.ErrorType.outOfRangeMessage);
+        } else if (xmarkList[row][col] == " ") { // // 이미 찾은 카드일떄
+            throw new CustomException(CustomException.ErrorType.alreadyFoundMessage);
+        } else {
+            return new Coordinates(row,col);
+        }
+    }
+    // 에러 핸들링.
+    private void handleCustomException(CustomException e) {
+        switch (e.getErrorType()) {
+            case inputMatrixMessage  -> System.out.println("행과 열을 입력해주세요. ex) (1,1) 혹은 1,1");
+            case outOfRangeMessage -> System.out.println("범위가 벗어났습니다.");
+            case alreadyFoundMessage -> System.out.println("해당 자리는 이미 찾았습니다. ");
+            case differentCoordinateMessage -> System.out.println("이전좌표랑 다른좌표를 입력해주세요.");
+            default -> System.out.println("알수없는 오류");
         }
     }
 
@@ -133,24 +139,13 @@ public class CardMatchingGame_step1 {
             showBoard();
             System.out.println("<시도 " + (attempts + 1) + ", 남은카드: " + (18 - matches * 2) + "> 좌표를 두 번 입력하세요.");
 
-            Coordinates matrix1 = new Coordinates();
-            matrix1 = inputCoordinator(scanner, "입력 1? ", matrix1.getRow(), matrix1.getCol());
-            int row1 = matrix1.getRow(), col1 = matrix1.getCol();
+            Coordinates matrix1 = inputCoordinates(scanner, "입력 1? ");
+            Coordinates matrix2 = inputCoordinates(scanner, "입력 2? ");
 
-            Coordinates matrix2 = new Coordinates();
-            matrix2 = inputCoordinator(scanner, "입력 2? ", row1, col1);
-            int row2 = matrix2.getRow(), col2 = matrix2.getCol();
-
-            if (board[row1][col1] == board[row2][col2]) {
-                isShow[row1][col1] = true;
-                isShow[row2][col2] = true;
+            if (matchingBoard(matrix1, matrix2)) {
                 matches++;
-            } else {
-                tmpShow[row1][col1] = true;
-                tmpShow[row2][col2] = true;
             }
             attempts++;
-
             if(checkCard(board)) {
                 System.out.println("짝이 맞는게 없어서 게임이 끝나지 않으므로 다시 게임 시작.");
                 T = new CardMatchingGame_step1();
@@ -158,6 +153,21 @@ public class CardMatchingGame_step1 {
             }
         }
         gameOver(scanner, attempts);
+    }
+    // 입력값에대한 카드 비교.
+    private boolean matchingBoard(Coordinates matrix1, Coordinates matrix2) {
+        int row1 = matrix1.getRow(), col1 = matrix1.getCol();
+        int row2 = matrix2.getRow(), col2 = matrix2.getCol();
+
+        if (board[row1][col1] == board[row2][col2]) {
+            isShow[row1][col1] = true;
+            isShow[row2][col2] = true;
+            return true;
+        } else {
+            tmpShow[row1][col1] = true;
+            tmpShow[row2][col2] = true;
+        }
+        return false;
     }
     // 모든카드가 다 뒤집어지면 게임종료와 함께 정보 출력.
     private void gameOver(Scanner scanner, int attempts) {
@@ -186,7 +196,6 @@ public class CardMatchingGame_step1 {
         return true; // 짝이 남아있지않으면 true
     }
 
-
     public static void main(String[] args) {
         try {
             T = new CardMatchingGame_step1();
@@ -195,7 +204,4 @@ public class CardMatchingGame_step1 {
             throw new RuntimeException(e);
         }
     }
-
-
 }
-
